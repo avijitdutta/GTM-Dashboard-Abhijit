@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abhijit Dutta — GTM Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   COSMIC DARK GLASS — Design System
+   Deep navy canvas · frosted glass cards · neon accents
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg:        #080D1A;
+  --bg2:       #0D1526;
+  --surface:   rgba(255,255,255,0.045);
+  --surface-h: rgba(255,255,255,0.08);
+  --border:    rgba(255,255,255,0.09);
+  --border-h:  rgba(255,255,255,0.18);
+  --blue:      #4FC3F7;
+  --blue-dim:  rgba(79,195,247,0.15);
+  --green:     #00E676;
+  --green-dim: rgba(0,230,118,0.12);
+  --amber:     #FFB300;
+  --amber-dim: rgba(255,179,0,0.12);
+  --red:       #FF5252;
+  --red-dim:   rgba(255,82,82,0.12);
+  --purple:    #CE93D8;
+  --text:      #DDE6F0;
+  --text-dim:  #6B82A0;
+  --text-faint:#3D526B;
+  --navy:      #1A3A5C;
+  --glow-b:    0 0 24px rgba(79,195,247,0.25);
+  --glow-g:    0 0 24px rgba(0,230,118,0.25);
+  --glow-a:    0 0 20px rgba(255,179,0,0.2);
+  --radius:    14px;
+  --radius-sm: 8px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+
+html { scroll-behavior:smooth; }
+
+body {
+  font-family:'Inter',system-ui,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(79,195,247,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(0,230,118,0.05) 0%, transparent 60%);
+}
+
+/* Stars canvas */
+#stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; opacity:0.5; }
+
+/* ---- NAVIGATION ---- */
+.nav {
+  position: sticky; top:0; z-index:200;
+  background: rgba(8,13,26,0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 28px;
+  gap: 0;
+}
+.nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 14px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.nav a:hover { color: var(--blue); }
+.nav a.active { color: var(--text); border-bottom-color: var(--blue); }
+
+/* ---- HERO ---- */
+.hero {
+  position: relative;
+  z-index:1;
+  padding: 52px 32px 42px;
+  background:
+    linear-gradient(160deg, rgba(79,195,247,0.08) 0%, transparent 50%),
+    linear-gradient(200deg, rgba(0,230,118,0.04) 50%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-inner { max-width:1200px; margin:0 auto; }
+.hero-eyebrow {
+  display: flex; align-items:center; gap:10px;
+  font-size:11px; font-weight:700; letter-spacing:1.5px;
+  color: var(--blue); text-transform:uppercase;
+  margin-bottom:14px;
+}
+.hero-eyebrow-line { height:1px; width:40px; background: linear-gradient(90deg, var(--blue), transparent); }
+.hero h1 {
+  font-size: 34px; font-weight:800;
+  letter-spacing: -0.8px; line-height:1.15;
+  background: linear-gradient(120deg, #fff 30%, var(--blue) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom: 10px;
+}
+.hero-sub { font-size:14px; color:var(--text-dim); margin-bottom:24px; font-weight:400; }
+.hero-chips { display:flex; flex-wrap:wrap; gap:10px; }
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  color: var(--text-dim);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.chip:hover { border-color:var(--border-h); color:var(--text); }
+.chip.highlight {
+  background: rgba(79,195,247,0.1);
+  border-color: rgba(79,195,247,0.35);
+  color: var(--blue);
+}
+
+/* ---- LAYOUT ---- */
+.section { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:40px 20px; }
+.section-title {
+  font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  color: var(--blue);
+  margin-bottom:22px;
+  display:flex; align-items:center; gap:14px;
+}
+.section-title::before { content:''; display:block; width:3px; height:18px; background:var(--blue); border-radius:2px; }
+.section-title .count {
+  background: var(--blue-dim);
+  border: 1px solid rgba(79,195,247,0.25);
+  color: var(--blue);
+  font-size:10.5px; padding:2px 10px; border-radius:12px;
+}
+
+/* ---- GLASS CARD ---- */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(16px) saturate(160%);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.glass:hover { border-color: var(--border-h); }
+.glass.glow-blue:hover { box-shadow: var(--glow-b); }
+.glass.glow-green:hover { box-shadow: var(--glow-g); }
+
+/* ---- STAT GRID ---- */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(165px,1fr)); gap:14px; margin-bottom:26px; }
+.stat-card {
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  position:relative; overflow:hidden;
+  transition: border-color 0.25s, transform 0.2s;
+}
+.stat-card:hover { border-color:var(--border-h); transform:translateY(-2px); }
+.stat-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent, var(--blue)), transparent);
+  opacity:0.6;
+}
+.stat-card.green  { --accent: var(--green); }
+.stat-card.amber  { --accent: var(--amber); }
+.stat-card.purple { --accent: var(--purple); }
+.stat-card.blue   { --accent: var(--blue); }
+.stat-card .val {
+  font-size:36px; font-weight:800; line-height:1;
+  color: var(--accent, var(--blue));
+  margin-bottom:6px;
+}
+.stat-card .lbl { font-size:11.5px; font-weight:600; color:var(--text-dim); }
+.stat-card .sub { font-size:10.5px; color:var(--text-faint); margin-top:4px; }
+
+/* ---- CHART GRID ---- */
+.chart-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:26px; }
+@media(max-width:860px){ .chart-row { grid-template-columns:1fr; } }
+.chart-card { padding:22px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface); backdrop-filter:blur(16px); }
+.chart-card h3 { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-dim); margin-bottom:18px; }
+
+/* ---- ICP BOX ---- */
+.icp-box {
+  padding: 22px 26px;
+  margin-bottom:24px;
+  border-radius:var(--radius);
+  background: var(--green-dim);
+  border: 1px solid rgba(0,230,118,0.2);
+  backdrop-filter:blur(12px);
+}
+.icp-box h3 { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--green); margin-bottom:14px; }
+.icp-chips { display:flex; flex-wrap:wrap; gap:9px; }
+.icp-chip {
+  background: rgba(0,230,118,0.08);
+  border: 1px solid rgba(0,230,118,0.25);
+  color: var(--green);
+  padding: 5px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  display:flex; align-items:center; gap:6px;
+}
+
+/* ---- PATTERN BOX ---- */
+.pattern-box {
+  padding:22px 26px; margin-bottom:26px;
+  border-radius:var(--radius);
+  background: linear-gradient(135deg, rgba(79,195,247,0.07) 0%, rgba(0,230,118,0.04) 100%);
+  border: 1px solid rgba(79,195,247,0.18);
+  backdrop-filter:blur(12px);
+}
+.pattern-box h3 { font-size:12px; font-weight:700; letter-spacing:0.5px; color:var(--blue); margin-bottom:14px; }
+.pattern-item { display:flex; gap:12px; margin-bottom:12px; align-items:flex-start; }
+.pattern-item:last-child { margin-bottom:0; }
+.pattern-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+.pattern-text { font-size:13px; color:var(--text); line-height:1.65; }
+.pattern-text strong { color:var(--blue); }
+
+/* ---- FILTER BAR ---- */
+.filter-bar {
+  padding:14px 18px;
+  margin-bottom:14px;
+  border-radius:var(--radius);
+  background: var(--surface);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.filter-bar label { font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-faint); margin-right:2px; }
+.filter-bar select, .filter-bar input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius:8px;
+  padding: 7px 12px;
+  font-size:13px;
+  color:var(--text);
+  outline:none;
+  font-family:inherit;
+  transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.filter-bar select { padding-right:28px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B82A0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:calc(100% - 10px) center; }
+.filter-bar select option { background:#1A2535; color:var(--text); }
+.filter-bar select:focus, .filter-bar input:focus { border-color:var(--blue); box-shadow:0 0 0 2px rgba(79,195,247,0.12); }
+.filter-bar input::placeholder { color:var(--text-faint); }
+.filter-bar input { width:210px; }
+.filter-count { margin-left:auto; font-size:11.5px; color:var(--text-dim); font-weight:600; }
+.clear-btn {
+  padding:6px 14px; border-radius:8px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--text-dim); font-size:12px; font-family:inherit;
+  cursor:pointer; transition:all 0.2s;
+}
+.clear-btn:hover { border-color:var(--border-h); color:var(--text); }
+
+/* ---- TABLE ---- */
+.table-wrap { border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); background:var(--surface); backdrop-filter:blur(16px); max-height:640px; overflow-y:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th {
+  background: rgba(8,13,26,0.95);
+  color:var(--text-dim); padding:12px 14px;
+  font-size:10.5px; font-weight:700; letter-spacing:0.8px;
+  text-transform:uppercase; text-align:left;
+  white-space:nowrap; cursor:pointer; user-select:none;
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:10;
+  transition:color 0.2s;
+}
+thead th:hover { color:var(--blue); }
+thead th.sort-asc, thead th.sort-desc { color:var(--blue); }
+.sort-icon { margin-left:4px; font-size:9px; opacity:0.4; }
+thead th.sort-asc .sort-icon, thead th.sort-desc .sort-icon { opacity:1; }
+tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.15s; }
+tbody tr:hover { background:rgba(79,195,247,0.04) !important; }
+tbody tr.tier1 { background:rgba(0,230,118,0.025); }
+tbody tr.tier2 { background:rgba(255,179,0,0.018); }
+tbody td { padding:13px 14px; vertical-align:top; line-height:1.55; }
+.co-name { font-weight:700; color:#fff; font-size:13.5px; }
+.co-hq { font-size:11px; color:var(--text-faint); margin-top:2px; }
+.co-link { font-size:11px; color:var(--blue); text-decoration:none; opacity:0.7; transition:opacity 0.2s; }
+.co-link:hover { opacity:1; text-decoration:underline; }
+.rank-num { font-size:18px; font-weight:800; text-align:center; color:var(--text-faint); }
+.score-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:50%;
+  font-size:15px; font-weight:800; color:#fff;
+}
+.score-badge.t1 { background: linear-gradient(135deg,#00C853,#00E676); box-shadow: 0 0 14px rgba(0,230,118,0.4); }
+.score-badge.t2 { background: linear-gradient(135deg,#F57C00,#FFB300); box-shadow: 0 0 12px rgba(255,179,0,0.35); }
+.tier-chip { display:inline-block; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700; letter-spacing:0.3px; }
+.tier-chip.t1 { background:rgba(0,230,118,0.12); color:var(--green); border:1px solid rgba(0,230,118,0.28); }
+.tier-chip.t2 { background:rgba(255,179,0,0.1); color:var(--amber); border:1px solid rgba(255,179,0,0.28); }
+.signal-pill { display:inline-block; background:rgba(79,195,247,0.07); border:1px solid rgba(79,195,247,0.15); border-radius:5px; padding:2px 8px; font-size:11px; color:var(--blue); margin-bottom:4px; }
+.body-text { font-size:12.5px; color:var(--text-dim); line-height:1.6; }
+.outreach-italic { font-size:12px; color:var(--green); font-style:italic; line-height:1.55; }
+.expand-btn { background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-faint); padding:0 4px; transition:color 0.2s, transform 0.2s; line-height:1; }
+.expand-btn:hover { color:var(--blue); }
+.expand-btn.open { color:var(--blue); transform:rotate(90deg); }
+.no-results { padding:56px; text-align:center; color:var(--text-faint); font-size:15px; }
+.no-results a { color:var(--blue); text-decoration:none; }
+
+/* Row detail */
+.row-detail { display:none; background:rgba(79,195,247,0.025); }
+.row-detail.open { display:table-row; }
+.row-detail td { padding:18px 22px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+@media(max-width:800px){ .detail-grid { grid-template-columns:1fr; } }
+.detail-block h4 { font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-faint); margin-bottom:7px; }
+.detail-block p { font-size:13px; color:var(--text); line-height:1.65; }
+.dm-link { color:var(--blue); text-decoration:none; font-size:12px; opacity:0.8; }
+.dm-link:hover { opacity:1; text-decoration:underline; }
+
+/* ---- ANTI-THESIS ---- */
+.strategic-q {
+  padding:28px 30px; margin-bottom:22px;
+  border-radius:var(--radius);
+  background: linear-gradient(135deg, rgba(79,195,247,0.06) 0%, rgba(0,230,118,0.03) 100%);
+  border:1px solid rgba(79,195,247,0.18);
+  position:relative; overflow:hidden;
+}
+.strategic-q::before {
+  content:'"';
+  position:absolute; top:-10px; left:20px;
+  font-size:120px; color:rgba(79,195,247,0.06);
+  font-family:Georgia,serif; line-height:1;
+}
+.strategic-q h3 { font-size:10.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--blue); margin-bottom:12px; }
+.strategic-q p { font-size:14px; line-height:1.75; color:var(--text); font-style:italic; }
+
+.bear-box {
+  padding:24px 26px; margin-bottom:22px;
+  border-radius:var(--radius);
+  background: rgba(255,82,82,0.04);
+  border:1px solid rgba(255,82,82,0.15);
+}
+.bear-box h3 { font-size:12px; font-weight:700; color:var(--red); margin-bottom:16px; }
+.bear-item { display:flex; gap:12px; margin-bottom:14px; align-items:flex-start; }
+.bear-item:last-child { margin-bottom:0; }
+.bear-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+.bear-text { font-size:13px; color:var(--text); line-height:1.65; }
+.bear-text strong { color:var(--red); }
+
+/* Tabs */
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:22px; }
+.tab-btn {
+  padding:10px 20px; font-size:12.5px; font-weight:600;
+  color:var(--text-dim); background:none; border:none;
+  border-bottom:2px solid transparent; cursor:pointer;
+  margin-bottom:-1px; transition:all 0.2s; font-family:inherit;
+}
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--blue); border-bottom-color:var(--blue); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.risk-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:800px){ .risk-grid { grid-template-columns:1fr; } }
+.risk-card {
+  border-radius:var(--radius);
+  background:var(--surface);
+  border:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  overflow:hidden; cursor:pointer;
+  transition:border-color 0.25s, box-shadow 0.25s;
+}
+.risk-card:hover { border-color:var(--border-h); }
+.risk-card.open { border-color:rgba(79,195,247,0.25); }
+.risk-header { padding:16px 18px; display:flex; align-items:center; gap:12px; }
+.risk-num {
+  width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12.5px; font-weight:800; color:#fff; flex-shrink:0;
+}
+.risk-num.critical { background:var(--red); box-shadow:0 0 10px rgba(255,82,82,0.4); }
+.risk-num.high     { background:var(--amber); box-shadow:0 0 10px rgba(255,179,0,0.35); }
+.risk-num.medium   { background:var(--purple); box-shadow:0 0 10px rgba(206,147,216,0.3); }
+.risk-title { font-size:13px; font-weight:700; color:var(--text); flex:1; }
+.risk-arrow { color:var(--text-faint); font-size:18px; transition:transform 0.22s; }
+.risk-card.open .risk-arrow { transform:rotate(90deg); color:var(--blue); }
+.risk-body { display:none; padding:0 18px 16px; border-top:1px solid rgba(255,255,255,0.05); }
+.risk-card.open .risk-body { display:block; padding-top:14px; }
+.risk-challenge { color:var(--text-dim); font-size:13px; line-height:1.65; margin-bottom:12px; }
+.risk-action {
+  background: rgba(79,195,247,0.06);
+  border-left:2px solid var(--blue);
+  padding:10px 14px; border-radius:0 6px 6px 0;
+  font-size:12px; color:var(--text); line-height:1.6;
+}
+.risk-action strong { color:var(--blue); display:block; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:3px; }
+
+/* ---- NEXT STEPS ---- */
+.steps-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+@media(max-width:860px){ .steps-grid { grid-template-columns:1fr; } }
+.step-card {
+  padding:22px 22px 22px;
+  border-radius:var(--radius);
+  background:var(--surface);
+  border:1px solid var(--border);
+  backdrop-filter:blur(14px);
+  position:relative; overflow:hidden;
+  transition: border-color 0.25s, transform 0.2s;
+}
+.step-card:hover { border-color:var(--border-h); transform:translateY(-2px); }
+.step-card::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  opacity:0.5;
+}
+.step-num-circle {
+  width:36px; height:36px; border-radius:50%;
+  background: linear-gradient(135deg, var(--blue), rgba(79,195,247,0.4));
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:800; color:#fff;
+  margin-bottom:14px;
+  box-shadow: var(--glow-b);
+}
+.step-card h4 { font-size:14px; font-weight:700; color:#fff; margin-bottom:10px; }
+.step-card p { font-size:12.5px; color:var(--text-dim); line-height:1.7; }
+.decision-rule {
+  margin-top:14px;
+  background: rgba(79,195,247,0.06);
+  border: 1px solid rgba(79,195,247,0.15);
+  border-radius:8px;
+  padding:11px 13px;
+  font-size:12px; color:var(--text); line-height:1.6;
+}
+.decision-rule strong { display:block; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; color:var(--blue); margin-bottom:4px; }
+
+/* ---- FOOTER ---- */
+.footer {
+  position:relative; z-index:1;
+  border-top:1px solid var(--border);
+  padding: 30px 28px;
+  text-align:center;
+  background: rgba(8,13,26,0.7);
+  backdrop-filter:blur(20px);
+}
+.footer-logo { display:inline-flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:12px; }
+.footer-love { font-size:12px; color:var(--text-faint); }
+.footer-love span { color:var(--red); }
+.footer-meta { font-size:11px; color:var(--text-faint); margin-top:8px; }
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(79,195,247,0.25); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(79,195,247,0.45); }
+
+/* ---- ANIMATIONS ---- */
+@keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+.section { animation: fadeUp 0.5s ease both; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#prospects">Prospects</a>
+  <a href="#antithesis">Anti-Thesis</a>
+  <a href="#nextsteps">Next Steps</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-line"></div>
+      GTM Intelligence Dashboard
+      <div class="hero-eyebrow-line" style="transform:scaleX(-1)"></div>
+    </div>
+    <h1>Abhijit Dutta</h1>
+    <div class="hero-sub">Fractional CBO / CRO / CSO &nbsp;·&nbsp; India Market Entry Specialist &nbsp;·&nbsp; March 2026</div>
+    <div class="hero-chips">
+      <span class="chip">30+ Years Experience</span>
+      <span class="chip">₹1,000 Cr+ P&L Managed</span>
+      <span class="chip">1.5M Outlet GT Network</span>
+      <span class="chip">8,000+ Channel Partners Built</span>
+      <span class="chip highlight">20 Qualified Prospects Identified</span>
+    </div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" class="section">
+  <div class="section-title">Prospect Overview <span class="count">March 2026</span></div>
+
+  <div class="stat-grid">
+    <div class="stat-card blue">
+      <div class="val">26</div>
+      <div class="lbl">Companies Researched</div>
+      <div class="sub">Across 6 industry sectors</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="val">20</div>
+      <div class="lbl">Qualified Prospects</div>
+      <div class="sub">Final shortlist after scoring</div>
+    </div>
+    <div class="stat-card green">
+      <div class="val">8</div>
+      <div class="lbl">Tier 1 — Immediate</div>
+      <div class="sub">Score 14–20/20 · Act now</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="val">12</div>
+      <div class="lbl">Tier 2 — Nurture</div>
+      <div class="sub">Score 9–13/20 · Warm pipeline</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="val">18</div>
+      <div class="lbl">Top Match Score</div>
+      <div class="sub">CellDerma & Pilgrim (joint #1)</div>
+    </div>
+    <div class="stat-card green">
+      <div class="val">6/8</div>
+      <div class="lbl">International Brands</div>
+      <div class="sub">No India CBO in place</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>Tier Breakdown</h3>
+      <canvas id="tierChart" height="190"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Sector Distribution</h3>
+      <canvas id="sectorChart" height="190"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Score Distribution (All 20)</h3>
+      <canvas id="scoreChart" height="190"></canvas>
+    </div>
+  </div>
+
+  <div class="icp-box">
+    <h3>✅ Anti-Thesis–Refined ICP Filters Applied to All 26 Candidates</h3>
+    <div class="icp-chips">
+      <div class="icp-chip"><span>📈</span>Series B Stage</div>
+      <div class="icp-chip"><span>💰</span>₹50–300 Cr ARR</div>
+      <div class="icp-chip"><span>🚫</span>No India Country Head</div>
+      <div class="icp-chip"><span>📦</span>Distribution-Heavy GTM</div>
+      <div class="icp-chip"><span>👤</span>Founder-CEO, Weak on Commercial</div>
+      <div class="icp-chip"><span>📣</span>Active India Entry Signal</div>
+    </div>
+  </div>
+
+  <div class="pattern-box">
+    <div class="section-title" style="margin-bottom:16px">Key Patterns Found</div>
+    <div class="pattern-item">
+      <span class="pattern-icon">💡</span>
+      <div class="pattern-text"><strong>6 of 8 Tier 1 companies are international beauty/personal care or FMCG brands entering India via distribution-heavy channels</strong> — not pure D2C. Most are entering via Nykaa/modern trade only, with GT, pharmacy, and salon channels completely untouched — the precise gap Abhijit fills.</div>
+    </div>
+    <div class="pattern-item">
+      <span class="pattern-icon">🎯</span>
+      <div class="pattern-text"><strong>Recommended first outreach: CellDerma (UK) → Dr. Dev Patel</strong> via Cosmoprof India connection. Lead with the Reckitt/Nivea zero-to-GT case study. Offer a 90-day India Distribution Diagnostic sprint.</div>
+    </div>
+    <div class="pattern-item">
+      <span class="pattern-icon">📖</span>
+      <div class="pattern-text"><strong>Anchor case study across all Tier 1 pitches:</strong> Tally Solutions ₹200 Cr → ₹1,000 Cr in 4 years via 8,000-partner channel ecosystem.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROSPECTS -->
+<div id="prospects" class="section">
+  <div class="section-title">GTM Prospect List <span class="count">20 Companies</span></div>
+
+  <div class="filter-bar">
+    <div>
+      <label>Tier</label>
+      <select id="filterTier" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="1">Tier 1</option>
+        <option value="2">Tier 2</option>
+      </select>
+    </div>
+    <div>
+      <label>Sector</label>
+      <select id="filterSector" onchange="applyFilters()">
+        <option value="">All Sectors</option>
+        <option value="Beauty">Beauty / Personal Care</option>
+        <option value="Fintech">Fintech / Payments</option>
+        <option value="D2C">D2C / Consumer</option>
+        <option value="SaaS">SaaS / Tech</option>
+      </select>
+    </div>
+    <div>
+      <label>Min Score</label>
+      <select id="filterScore" onchange="applyFilters()">
+        <option value="0">Any Score</option>
+        <option value="15">15+ High</option>
+        <option value="17">17+ Best Fit</option>
+      </select>
+    </div>
+    <input type="text" id="searchInput" placeholder="🔍  Search company, sector, DM, signal…" oninput="applyFilters()">
+    <button class="clear-btn" onclick="clearFilters()">✕ Clear</button>
+    <div class="filter-count" id="resultCount">Showing 20 of 20</div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="prospectsTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)" data-col="0">#<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable(1)" data-col="1">Company<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable(4)" data-col="4">Sector<span class="sort-icon">↕</span></th>
+          <th>India Entry Signal</th>
+          <th onclick="sortTable(10)" data-col="10" class="sort-desc">Score<span class="sort-icon">↓</span></th>
+          <th onclick="sortTable(11)" data-col="11">Tier<span class="sort-icon">↕</span></th>
+          <th>Why Abhijit Fits</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div id="noResults" class="no-results" style="display:none">No matching prospects. <a href="#" onclick="clearFilters();return false;">Clear filters</a></div>
+  </div>
+</div>
+
+<!-- ANTI-THESIS -->
+<div id="antithesis" class="section">
+  <div class="section-title">GTM Anti-Thesis Analysis <span class="count">12 Dimensions</span></div>
+
+  <div class="strategic-q">
+    <h3>The Core Strategic Question</h3>
+    <p>Are India's high-growth scale-up founders (₹50–300 Cr ARR, post-Series B) willing to pay ₹8–12L/month for a fractional CBO with deep traditional distribution expertise — or do they consider this a problem solved by a full-time VP Sales hire at ₹35L annual CTC, which looks cheaper on paper?</p>
+  </div>
+
+  <div class="bear-box">
+    <h3>⚠️ The Bear Case — 5 Compounding Risks</h3>
+    <div class="bear-item"><span class="bear-icon">🔴</span><div class="bear-text"><strong>1. Positioning–Channel Mismatch (Dimensions #4 + #9) — Most Dangerous.</strong> He is trying to reach startup founders via LinkedIn passive presence + word-of-mouth — but those founders don't use this channel to find fractional executives. Even a sharp message goes to the wrong address.</div></div>
+    <div class="bear-item"><span class="bear-icon">🔴</span><div class="bear-text"><strong>2. Product–Pricing Gap (Dimensions #1 + #5) — Kills Qualified Conversations.</strong> Without a defined, scoped, priced engagement offer, every conversation becomes a custom negotiation. At ₹8–15L/month, prospects anchor against a full-time VP hire and choose the cheaper option.</div></div>
+    <div class="bear-item"><span class="bear-icon">🟠</span><div class="bear-text"><strong>3. Capacity Trap (Dimensions #6 + #12) — Existential Pipeline Risk.</strong> Two live engagements consume available hours, preventing pipeline-building. When one engagement ends, there is no backfill.</div></div>
+    <div class="bear-item"><span class="bear-icon">🟠</span><div class="bear-text"><strong>4. Generalist Perception (Dimensions #2 + #7) — Slow Poison.</strong> "8 industries, 30 years" reads as unfocused rather than versatile. The actual superpower — building 1.5M-outlet distribution networks — is buried.</div></div>
+    <div class="bear-item"><span class="bear-icon">🟡</span><div class="bear-text"><strong>5. Infrastructure Vacuum (Dimensions #8 + #12) — Hard Ceiling on Scale.</strong> No website, no CRM, no BD function, no referral structure. The practice can never grow beyond what one person can manage via personal relationships.</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('critical', this)">🔴 Critical (#1 + #5)</button>
+    <button class="tab-btn" onclick="showTab('high', this)">🟠 High (#2 + #4 + #6 + #7 + #9 + #12)</button>
+    <button class="tab-btn" onclick="showTab('medium', this)">🟡 Medium (#3 + #8 + #10 + #11)</button>
+  </div>
+
+  <div id="tab-critical" class="tab-panel active"><div class="risk-grid" id="riskGridCritical"></div></div>
+  <div id="tab-high" class="tab-panel"><div class="risk-grid" id="riskGridHigh"></div></div>
+  <div id="tab-medium" class="tab-panel"><div class="risk-grid" id="riskGridMedium"></div></div>
+</div>
+
+<!-- NEXT STEPS -->
+<div id="nextsteps" class="section">
+  <div class="section-title">Three Immediate Actions <span class="count">This Week + Next 2 Weeks</span></div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num-circle">1</div>
+      <h4>Package One Flagship Engagement</h4>
+      <p>Draft a single "GTM Launch Sprint" offer — 90 days, fixed price (₹25–35L), defined deliverables: channel architecture, 3 signed distribution/partner agreements, SOPs, hiring brief. Validate pricing with 5 warm contacts.</p>
+      <div class="decision-rule"><strong>Decision Rule</strong>If 3 of 5 warm contacts say the price/scope feels right → launch as primary offer. If all 5 say "too expensive" → reduce scope/price and retest.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num-circle">2</div>
+      <h4>Run 5 Warm VC Portfolio Introductions</h4>
+      <p>Target 5 VC funds active in consumer/D2C/SaaS/fintech: Blume Ventures, Elevation Capital, Stellaris, Nexus, Peak XV. Request a 20-minute call with the portfolio support or talent team. Ask: "Which of your companies are struggling with commercial scaling?"</p>
+      <div class="decision-rule"><strong>Decision Rule</strong>If 2+ of 5 VC contacts make an introduction → VC referral channel validated. If none → profile doesn't fit their portfolio stage, pivot channel.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num-circle">3</div>
+      <h4>Publish One Anchor Case Study on LinkedIn</h4>
+      <p>Ghostwrite an 800-word LinkedIn article: "How we scaled Tally's channel from ₹200 Cr to ₹1,000 Cr in 4 years — and what every founder building distribution gets wrong." Include 3 specific decisions, 2 failures, 1 counterintuitive insight.</p>
+      <div class="decision-rule"><strong>Decision Rule</strong>If article generates 500+ views + 2 founder comments saying "this is my problem" → LinkedIn content channel viable. If zero engagement → existing network is wrong audience.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" width="96" height="60" viewBox="0 0 352 219" fill="none" style="opacity:0.55">
+      <path fill="#FFFFFF" fill-rule="evenodd" d="M93.186 150.534V67.056h16.282l130.255 64.628v-16.157L93.186 42.82V7.284a4.833 4.833 0 0 1 4.86-4.856h7.291c3.645 0 9.558 2.693 9.558 2.693l124.828 61.935V0h16.282v83.213h-16.282L109.468 18.585v18.85l146.537 70.014v35.801c0 2.693-2.147 4.591-4.86 4.591h-7.291c-2.713 0-9.558-2.693-9.558-2.693L109.468 83.213v67.321H93.186Zm-65.157 67.983v-35.316h-4.21v27.798h-.346l-19.33-27.798H0v35.316h4.28v-27.728h.346l19.261 27.728h4.142Zm46.09-8.001c1.347-2.713 2.02-5.932 2.02-9.657 0-3.724-.673-6.943-2.02-9.656-1.345-2.714-3.192-4.806-5.54-6.277-2.347-1.472-5.028-2.208-8.042-2.208-3.015 0-5.696.736-8.043 2.208-2.347 1.471-4.194 3.563-5.54 6.277-1.347 2.713-2.02 5.932-2.02 9.656 0 3.725.673 6.944 2.02 9.657 1.346 2.713 3.193 4.805 5.54 6.277 2.347 1.471 5.028 2.207 8.043 2.207 3.014 0 5.695-.736 8.043-2.207 2.347-1.472 4.194-3.564 5.54-6.277Zm-3.658-17.399c1.024 2.103 1.536 4.684 1.536 7.742s-.512 5.639-1.536 7.743c-1.013 2.104-2.388 3.696-4.125 4.776-1.726 1.081-3.66 1.621-5.8 1.621-2.14 0-4.078-.54-5.816-1.621-1.726-1.08-3.1-2.672-4.125-4.776-1.012-2.104-1.519-4.685-1.519-7.743 0-3.058.507-5.639 1.52-7.742 1.023-2.104 2.398-3.696 4.124-4.777 1.738-1.081 3.677-1.621 5.817-1.621s4.073.54 5.799 1.621c1.737 1.081 3.112 2.673 4.125 4.777Zm46.483 25.4h4.142v-35.316h-4.211v27.798h-.345L97.2 183.201h-4.143v35.316h4.28v-27.728h.346l19.261 27.728Zm26.708-35.316h-4.28v35.316h20.711v-3.794h-16.431v-31.522Zm32.78 35.316h4.28v-35.316h-4.28v35.316Zm46.47 0h4.142v-35.316h-4.211v27.798h-.345l-19.331-27.798h-4.142v35.316h4.28v-27.728h.345l19.262 27.728Zm43.76-35.316H245.33v35.316h21.608v-3.794H249.61v-12.001h15.948v-3.794H249.61v-11.933h17.052v-3.794Zm14.398 35.316h4.488l3.553-10.001h14.295l3.553 10.001h4.488l-12.979-35.316h-4.419l-12.979 35.316Zm20.988-13.795-5.661-15.934h-.277l-5.661 15.934h11.599Zm36.559-21.521h-11.944v35.316h4.28v-13.795h7.733c.306 0 .606-.006.9-.017l7.453 13.812H352l-7.985-14.562c.5-.17.97-.369 1.409-.595 1.761-.92 3.067-2.185 3.918-3.794.852-1.61 1.277-3.455 1.277-5.535 0-2.081-.425-3.938-1.277-5.57-.851-1.633-2.163-2.915-3.935-3.846-1.772-.942-4.039-1.414-6.8-1.414Zm-7.664 17.658h7.595c1.887 0 3.405-.276 4.556-.828 1.162-.551 2.002-1.333 2.52-2.345.529-1.023.794-2.241.794-3.655 0-1.414-.265-2.65-.794-3.708-.529-1.058-1.375-1.874-2.537-2.449-1.162-.586-2.698-.879-4.608-.879h-7.526v13.864Z" clip-rule="evenodd"/>
+    </svg>
+  </div>
+  <div class="footer-love">Made with <span>♥</span> by Nonlinear</div>
+  <div class="footer-meta">GTM Intelligence Dashboard · Abhijit Dutta · March 2026 · 26 companies researched · 20 shortlisted</div>
+</footer>
+
+<script>
+/* ============ STARFIELD ============ */
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars=[];
+  function resize(){ W=c.width=window.innerWidth; H=c.height=window.innerHeight; }
+  function mkStars(){
+    stars=[];
+    for(let i=0;i<140;i++){
+      stars.push({ x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.2+0.2, o:Math.random()*0.6+0.1, speed:Math.random()*0.3+0.05 });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.o += Math.sin(Date.now()/2000+s.x)*0.003;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,210,255,${Math.max(0.05,s.o)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); mkStars(); draw();
+  window.addEventListener('resize',()=>{ resize(); mkStars(); });
+})();
+
+/* ============ DATA ============ */
+const companies=[
+  {rank:1,company:"CellDerma",website:"cellderma.com",hq:"London, UK",sector:"Beauty / Personal Care",signal:"Confirmed first India launch Cosmoprof India Dec 2025; founder actively seeking distribution partners",model:"Professional salon + consumer, distribution-heavy GT + modern trade",stage:"Early stage, founder-led, £10M+ R&D backed; UK-India FTA reduces tariffs to 10%",dm:"Dr. Dev Patel (Founder & CEO)",dm_link:"https://linkedin.com/in/dr-dev-patel-7a595226/",score:18,tier:1,why:"Zero India channel. Abhijit built Reckitt and Nivea India from scratch — same profile. 90-day sprint: distribution architecture + 3 signed partner agreements.",outreach:"India distribution diagnostic offer — lead with Reckitt/Nivea zero-to-GT case study"},
+  {rank:2,company:"Pilgrim",website:"discoverpilgrim.com",hq:"Mumbai, India",sector:"D2C Beauty",signal:"₹200 Cr Series B extension 2025. Revenue ₹204 Cr. Targeting ₹1,000 Cr ARR. Doubling offline from 10K to 20K+ retail stores.",model:"D2C online (80%) + offline general trade (20%). Scaling GT rapidly.",stage:"Series B extension, ₹204 Cr revenue FY25. IITian founders. VC-backed.",dm:"Anurag Kedia (Co-founder & CEO)",dm_link:"https://linkedin.com/in/anuragkedia/",score:18,tier:1,why:"Identical challenge to Tally: offline channel build from digital-first base. Abhijit took Tally ₹200 Cr → ₹1,000 Cr in 4 years via 8,000-partner channel.",outreach:"GT distribution architecture sprint — lead with Tally ₹200 Cr→₹1,000 Cr case study"},
+  {rank:3,company:"Foxtale",website:"foxtale.in",hq:"Mumbai, India",sector:"D2C Beauty",signal:"$30M Series C Jan 2025 with KOSÉ Japan (10% stake). 150% growth FY25. GT expansion + KOSÉ/Spawake India brand rollout mandate.",model:"D2C digital (90%) + offline GT (10%). KOSÉ Spawake brand distribution through Foxtale channel.",stage:"Series C, KOSÉ-backed, ~₹300 Cr+ revenue est. CEO stated plans to hire top executives.",dm:"Romita Mazumdar (Founder & CEO)",dm_link:"https://linkedin.com/company/foxtale-skin",score:18,tier:1,why:"GT build + KOSÉ/Spawake multi-brand mandate = two revenue streams for one fractional CBO. CEO actively recruiting top executives — explicit hiring signal.",outreach:"Multi-brand GT architecture: Foxtale + Spawake through same distributor network"},
+  {rank:4,company:"Tazapay",website:"tazapay.com",hq:"Singapore / Chennai",sector:"Fintech / Payments",signal:"$36M Series B closed March 2026 (Circle Ventures, Peak XV). India entity in Chennai (est. 2023). India GTM acceleration explicitly funded.",model:"B2B/institutional: enterprise, fintechs, marketplaces in 70+ markets. India as Asia hub.",stage:"Series B $36M total. 222 employees. Operationally breakeven. $10B+ annualised volume.",dm:"Rahul Shinghal (CEO)",dm_link:"https://linkedin.com/company/tazapay",score:17,tier:1,why:"No India commercial head. Abhijit's Innoviti experience: built India B2B payments vertical from zero to $2M ARR Year 1 via enterprise retail relationships.",outreach:"India enterprise commercial build — anchor on Innoviti $2M ARR Year 1 case study"},
+  {rank:5,company:"Face Theory",website:"facetheory.com",hq:"Leeds, UK",sector:"Beauty / Personal Care",signal:"£10M Series A. Cosmoprof India 2025 exhibit. CEO: 'India is super interesting.' Asia expansion via Sephora. E-commerce live in India.",model:"D2C digital-first + Sephora Asia premium retail. India via e-commerce + distribution prospecting.",stage:"Series A (£10M). Ingredient-focused, B-Corp certified. Founder-led.",dm:"Jonny Croft (Co-founder & CEO)",dm_link:"https://linkedin.com/company/facetheory",score:16,tier:1,why:"Same pre-launch stage as Believe Cosmetics when Abhijit joined. Built Believe India from zero to $30M ARR. CEO flagged India as priority with no India GTM team.",outreach:"India market entry map — lead with Believe Cosmetics $30M ARR case study"},
+  {rank:6,company:"TIRTIR",website:"tirtir.global",hq:"Seoul, South Korea",sector:"Beauty / Personal Care",signal:"India offline launch Jan 2025 via Reliance Retail Tira. 5 premium stores. Acquired by Goodai Global for $215M Jun 2025 — founder resigned.",model:"Modern trade / key accounts (Tira). Nykaa online. Post-acquisition team reset.",stage:"Goodai Global portfolio. Significant scale. Leadership transition underway.",dm:"Goodai Global management (CEO search likely)",dm_link:"https://linkedin.com/company/tirtir",score:16,tier:1,why:"Post-acquisition leadership vacuum. India commercial head not in place. Tira is the entry point, not the scale engine — GT expansion needed for volume.",outreach:"Post-acquisition India commercial head: Tira → GT expansion blueprint"},
+  {rank:7,company:"Denman Professional",website:"brushexpert.com",hq:"London, UK",sector:"Beauty / Personal Care",signal:"India market entry via SSIZ International Dec 2025. Cosmoprof India 2025. UK-India FTA reducing tariffs. Salon and consumer expansion underway.",model:"Professional salon + consumer distribution via SSIZ International (India exclusive distributor).",stage:"Established UK brand, SME. New India market entry.",dm:"Catherine McCambridge (Head of Sales, UK)",dm_link:"https://linkedin.com/company/denman-brush",score:16,tier:1,why:"Single-distributor dependency (SSIZ) creates a ceiling. Abhijit's Nokia experience: built 1.5M outlet GT reach on top of existing trade partners — same architecture needed.",outreach:"Salon network + consumer GT build beyond SSIZ single-distributor model"},
+  {rank:8,company:"Anua",website:"anua.com",hq:"Seoul, South Korea",sector:"Beauty / Personal Care",signal:"Exclusive India launch on Nykaa June 2025. Ryan Lee CEO. Nykaa exclusive for first phase.",model:"D2C online + Nykaa modern trade. Exclusively Nykaa for India currently.",stage:"Growing founder-led brand. Nykaa exclusive deal suggests limited India commercial team.",dm:"Ryan Lee, CEO — The Founders Inc",dm_link:"https://linkedin.com/company/anua-official",score:15,tier:1,why:"Nykaa covers 230 stores — modern trade only. GT, pharmacy, salon channels untouched. Abhijit can build offline volume that Nykaa cannot provide.",outreach:"Offline India expansion beyond Nykaa: GT + pharmacy + salon channels"},
+  {rank:9,company:"Supergoop",website:"supergoop.com",hq:"San Antonio, USA",sector:"Beauty / Personal Care",signal:"India exclusive launch on Nykaa Apr 2025. New CEO appointed Dec 2025 (Melis del Rey). Leadership transition underway.",model:"D2C digital + Nykaa modern trade. India via Nykaa currently.",stage:"PE-backed (Encore Consumer Capital), significant scale. New CEO = India strategy reset.",dm:"Melis del Rey, CEO (Dec 2025)",dm_link:"https://linkedin.com/company/supergoop",score:13,tier:2,why:"New CEO + India entry = open window for India strategy input. Opportunity to frame India offline expansion plan before strategy is locked.",outreach:"India offline expansion strategy — reach new CEO before India plan is set"},
+  {rank:10,company:"Arthan Finance",website:"arthanfinance.com",hq:"Mumbai, India",sector:"Fintech / Payments",signal:"₹50 Cr Series B Jun 2024 (Incofin India Progress Fund + Dell Foundation). Scaling merchant/SME lending.",model:"B2B institutional / enterprise lending to SMEs and merchants.",stage:"Series B, early scaling, mission-driven fintech. Founder-led.",dm:"Founders (not publicly disclosed)",dm_link:"https://linkedin.com/company/arthan-finance",score:13,tier:2,why:"B2B merchant/SME channel; Abhijit's Innoviti experience in merchant payments acquisition directly relevant.",outreach:"Merchant channel distribution — fintech B2B acquisition via existing trade networks"},
+  {rank:11,company:"Obagi Medical",website:"obagi.com",hq:"El Segundo, USA",sector:"Beauty / Personal Care",signal:"India launch via Nykaa Jan 2025. Chris Driver (President South Asia Pacific, Waldencast) publicly commented on India launch.",model:"Medical channel + modern trade (Nykaa). Clinical skincare requiring dermatologist/pharma channel.",stage:"Waldencast group brand. Mid-market scale. South Asia Pacific regional structure.",dm:"Chris Driver, President South Asia Pacific",dm_link:"https://linkedin.com/company/obagi-medical",score:12,tier:2,why:"Medical skincare needs pharma + dermatologist channel beyond Nykaa. Abhijit's Reckitt pharma distribution experience applicable.",outreach:"India pharma + dermatologist channel build — beyond Nykaa modern trade"},
+  {rank:12,company:"Casmara",website:"casmara.com",hq:"Valencia, Spain",sector:"Beauty / Personal Care",signal:"India product launches Jul 2025 via Esskay Beauty (17-year exclusive partnership). Skinomics 2025 salon conclave launch.",model:"Professional salon via Esskay Beauty exclusive India distributor.",stage:"Established brand. India deepening through existing distributor relationship.",dm:"Rayed Merchant (Director, Esskay Beauty)",dm_link:"https://linkedin.com/company/casmara",score:12,tier:2,why:"17-year single-distributor dependency is a ceiling. Salon network scale-out beyond Esskay's reach requires independent commercial support.",outreach:"Salon network expansion beyond Esskay distributor reach — Tier 2 cities"},
+  {rank:13,company:"WOW Skin Science",website:"buywow.in",hq:"Bangalore, India",sector:"D2C Beauty",signal:"₹233 Cr FY24 revenue. PE-backed. Active GT + MT offline scaling.",model:"D2C + offline retail (GT + modern trade).",stage:"Growth stage, significant revenue. PE-backed. Co-founder led.",dm:"Manish Chowdhary / Ashwin Sokke (Co-founders)",dm_link:"https://linkedin.com/company/wow-skin-science",score:12,tier:2,why:"Offline expansion stage from D2C base — same inflection point as Foxtale/Pilgrim. GT architecture design needed.",outreach:"D2C to GT transition blueprint — distribution architecture sprint"},
+  {rank:14,company:"Country Delight",website:"countrydelight.in",hq:"Gurugram, India",sector:"D2C / FMCG",signal:"$25M fresh funding 2025. Vertically integrated model. Scaling last-mile delivery.",model:"D2C direct delivery + B2B institutional (corporates, schools) as adjacent channel.",stage:"Series C, scaling revenue. Founder-led.",dm:"Nitin Kaushal / Chakradhar Gade (Co-founders)",dm_link:"https://linkedin.com/company/country-delight",score:11,tier:2,why:"B2B institutional channel (corporates, offices, schools, hospitals) underdeveloped. Abhijit's institutional B2B experience at Innoviti relevant.",outreach:"B2B institutional channel build — corporate + institutional delivery partnerships"},
+  {rank:15,company:"Paula's Choice",website:"paulaschoice.com",hq:"Seattle, USA (Unilever)",sector:"Beauty / Personal Care",signal:"India Nykaa partnership strengthened Jun 2025. Viksita Singh Menon (GM SE Asia) leads India from Singapore.",model:"D2C digital + Nykaa modern trade. India part of SE Asia regional structure.",stage:"Unilever-owned. Large scale. SE Asia GM manages India.",dm:"Viksita Singh Menon, GM Southeast Asia",dm_link:"https://linkedin.com/company/paulas-choice",score:11,tier:2,why:"SE Asia GM managing India from Singapore = India gets diluted attention. India-specific offline push possible with dedicated fractional support.",outreach:"India-specific offline expansion — pharmacies + GT beyond Nykaa"},
+  {rank:16,company:"Illiyoon (Amorepacific)",website:"illiyoon.com",hq:"Seoul, South Korea",sector:"Beauty / Personal Care",signal:"India launch via Nykaa 2025 (Amorepacific 10-year partnership). Part of 8-brand Korea portfolio on Nykaa.",model:"Modern trade / Nykaa online. Amorepacific regional structure manages India.",stage:"Amorepacific portfolio brand. Korea multinational.",dm:"Amorepacific India / Nykaa Beauty regional lead",dm_link:"https://linkedin.com/company/amorepacific",score:10,tier:2,why:"Nykaa-exclusive entry with no India offline. GT and pharmacy channels untapped for barrier skincare.",outreach:"India offline expansion: pharmacy + GT channels for sensitive skin brand"},
+  {rank:17,company:"Mise En Scène",website:"miseenscene.com",hq:"Seoul, South Korea",sector:"Beauty / Personal Care",signal:"India launch via Nykaa 2025 (Amorepacific 10-year anniversary). Korea's top-selling haircare brand.",model:"Modern trade / Nykaa. Part of Amorepacific 8-brand India portfolio.",stage:"Amorepacific portfolio brand. Korea multinational.",dm:"Amorepacific India / Nykaa Beauty regional lead",dm_link:"https://linkedin.com/company/amorepacific",score:10,tier:2,why:"Haircare GT via salon + pharmacy channels. 'Glass Hair' positioning fits premium salon distribution that Abhijit built at Nokia/Reckitt.",outreach:"Salon + pharmacy channel build for premium haircare brand"},
+  {rank:18,company:"Eucerin (Beiersdorf)",website:"eucerin.co.in",hq:"Hamburg, Germany",sector:"Beauty / Personal Care",signal:"India launch via Nykaa 2025. Part of Beiersdorf India expansion. Anti-Pigment + Sun Protection lines launched.",model:"Medical + modern trade (Nykaa). Clinical positioning requiring pharma channel.",stage:"Beiersdorf group brand. Large corporate. India via Nykaa.",dm:"Beiersdorf India leadership",dm_link:"https://linkedin.com/company/beiersdorf",score:10,tier:2,why:"Clinical skincare needs pharmacy and dermatologist channel beyond Nykaa. Large corporate may use internal resources.",outreach:"India pharmacy + dermatologist channel build — clinical skincare offline expansion"},
+  {rank:19,company:"Chantecaille",website:"chantecaille.com",hq:"New York, USA (Luxasia)",sector:"Beauty / Personal Care",signal:"India entry via Luxasia 2025. Available on Nykaa, Tira, SS Beauty. Italy as Country of Honor at Cosmoprof India 2025.",model:"Luxury retail (Nykaa / Tira / SS Beauty). Luxasia is India distributor.",stage:"Niche luxury brand. Distributed via Luxasia in India. Limited reach.",dm:"Luxasia India management",dm_link:"https://linkedin.com/company/luxasia",score:10,tier:2,why:"Luxury brand with limited India reach. Premium spa + resort channel expansion possible with network access.",outreach:"Premium retail + spa + resort channel expansion beyond current luxury doors"},
+  {rank:20,company:"Holition",website:"holition.com",hq:"London, UK",sector:"SaaS / Beauty Tech",signal:"Exploring India partnerships for AR-powered virtual try-on for beauty brands. At Cosmoprof India 2025.",model:"B2B tech partnerships with beauty brands and retailers.",stage:"Growth stage B2B tech. Founder-led. UK-based.",dm:"CEO / Business Development lead",dm_link:"https://linkedin.com/company/holition",score:9,tier:2,why:"B2B beauty tech; Abhijit's network of beauty brand CMOs and retail buyers gives Holition warm introduction pipeline.",outreach:"India beauty brand introduction network — open doors via Abhijit's brand network"},
+];
+
+const antithesisRisks=[
+  {num:1,level:"critical",title:"Wrong Product — No Defined Engagement Package",challenge:"Fractional CXO is a model, not a product. There is no defined deliverable — no '90-day sprint' that a prospect can evaluate quickly. The ask is effectively 'trust me with your commercial strategy' — a high-trust, slow-close proposition.",action:"Define three specific engagement packages with fixed scopes, timelines, and success metrics — e.g., 'GTM Launch Sprint (90 days, ₹X, deliverable: channel architecture + 3 signed distribution agreements).' Test whether packages shorten the sales cycle."},
+  {num:2,level:"high",title:"Wrong Customer — ICP Too Broad",challenge:"'High-growth Indian companies' is not a customer segment — it's an aspiration. The sweet spot is a very narrow band: funded scale-ups at ₹50–200 Cr ARR, post-Series B, with a founder-CEO strong on product/tech but weak on commercial.",action:"Identify 30 India-based companies that raised Series B in 2023–2024, are in consumer/D2C/SaaS/fintech, between ₹50–300 Cr ARR, with a founder-CEO without a dedicated CBO/CRO. Map them from Tracxn or Crunchbase."},
+  {num:3,level:"medium",title:"Wrong User — Single Champion, Single Point of Failure",challenge:"The buyer and internal champion are the same person (founder-CEO), and that person almost never responds to cold outreach. Both current engagements were secured by top leadership directly. Without a structured referral engine, the pipeline depends entirely on being in the right room at the right time.",action:"Ask current clients (Pepperfry, HostBooks) and three most recent past employers for two warm introductions each to founders or CEOs in their network. Six calls with warm intros will teach more than any amount of inbound marketing."},
+  {num:4,level:"high",title:"Wrong Channel — Reaches the Wrong Audience",challenge:"LinkedIn is flooded with senior executives offering fractional roles. Word of mouth from Abhijit's corporate network (Reckitt, Nokia, HCL) reaches precisely the wrong audience: other corporate executives, not startup founders.",action:"Map where India's Series A/B founders actually discover fractional executives. Pick one channel and publish one piece of content (e.g., 'How I built Tally's ₹1,000 Cr channel ecosystem'). Measure the inbound response quality."},
+  {num:5,level:"critical",title:"Wrong Pricing — No Published Pricing Architecture",challenge:"Without transparent pricing, every prospective client must enter a negotiation — slowing the sales cycle. At ₹8–15L/month, prospects compare against a full-time VP Commercial at ₹35–40L/year CTC which 'seems cheaper.'",action:"Benchmark last three engagements and build a three-tier pricing card (Advisory / Fractional / Embedded) with clear deliverables per tier. Test on the next 3 prospect conversations. Track whether transparent pricing accelerates or kills the conversation."},
+  {num:6,level:"high",title:"Wrong Incentives — Income Discourages Pipeline Building",challenge:"Two live engagements actively discourage pipeline-building behaviour. Referral partners have zero structured incentive to actively refer. 40% of Indian startups work with fractional CXOs (Nasscom), meaning VCs are frequently asked 'can you recommend a fractional CBO?' — but Abhijit is not on those shortlists.",action:"Identify 5 Indian VC funds backing consumer/SaaS/D2C companies (Blume, Elevation, Stellaris, Nexus, Peak XV) and request a 20-minute 'fractional CBO availability' conversation. Goal: get on their fractional executive shortlist."},
+  {num:7,level:"high",title:"Wrong Positioning — Buries the Strongest Asset",challenge:"'Strategic Business Leader' is in the top 3 most common LinkedIn headlines for senior Indian executives. Cross-industry breadth reads as 'unfocused' rather than 'versatile.' His strongest differentiator — building 600-distributor rural networks and scaling channels to ₹1,000 Cr — is buried in a career timeline.",action:"Rewrite the LinkedIn headline and 'About' section using the Tally case study ($25M→$130M, 8,000 partners). Headline: 'I build India distribution engines. Former CBO/CSO at Tally, Believe, Pepperfry — 30 years, 8 industries.'"},
+  {num:8,level:"medium",title:"Wrong Technology — 2026 Practice, 1998 Infrastructure",challenge:"No website, no lead capture, no CRM, no structured follow-up process. AI is beginning to automate portions of what he does, raising the bar for what clients expect from a fractional commercial leader.",action:"Build a minimal viable web presence in 2 weeks: a single-page site (Notion, Framer, or Webflow) with 3 things — hero story case study, clear service menu with 3 engagement types, and a 'schedule a call' CTA."},
+  {num:9,level:"high",title:"Wrong Pitch — Answers 'Who Is Abhijit?' Not 'What's My Problem?'",challenge:"The pitch answers 'who is Abhijit?' but not 'what problem does he solve for me right now?' No single hero narrative told in enough depth to create emotional resonance. '30 years, 8 industries' competes with a dominant counter-narrative: 'the best commercial leaders come from within the startup world.'",action:"Write one 800-word case study: 'How I built Tally's ₹1,000 Cr channel ecosystem in 4 years' — with specific numbers, specific decisions, and one moment where everything nearly went wrong. Publish on LinkedIn."},
+  {num:10,level:"medium",title:"Wrong Assumptions — Three Load-Bearing Risks",challenge:"(1) Cross-industry breadth assumed universally deployable but SaaS-specific metric fluency not clearly established. (2) Two engagements assumed to validate the model but don't prove it scales. (3) Companies assumed to pay without a defined ROI framework — CFOs want a business case.",action:"Build a simple one-page 'Commercial Impact Estimator' — a template prospects fill in with current revenue, target revenue, team size, and channel gaps, producing an estimate of what a fractional CBO engagement unlocks."},
+  {num:11,level:"medium",title:"Wrong Geography — Kolkata Base, Bangalore Opportunity",challenge:"Kolkata is not where the startup ecosystem lives. Bangalore has 35%+ of India's funded startups. A fractional CXO anchored in Kolkata is systematically less visible to the Bangalore VC ecosystem — where the highest-paying fractional mandates originate.",action:"Block one week per month to be physically present in Bangalore (3 days) or Mumbai (2 days) specifically for founder coffees, VC portfolio meetings, and startup community events."},
+  {num:12,level:"high",title:"Wrong Team — Solo Operator, No BD Infrastructure",challenge:"A solo operator with no business development support, no EA, no research capability, and no marketing function will hit a hard capacity ceiling. The GTM pipeline is currently being built by Avijit, not by Abhijit — a structural dependency.",action:"Define clearly who is responsible for what: Avijit handles positioning, content creation, outreach infrastructure, and pipeline tracking; Abhijit commits to 3 founder calls/month from warm intros, one LinkedIn article per month, and a monthly pipeline review."},
+];
+
+/* ============ CHARTS ============ */
+Chart.defaults.color='#6B82A0';
+Chart.defaults.font.family="'Inter',system-ui,sans-serif";
+Chart.defaults.font.size=11;
+
+window.addEventListener('load',()=>{
+  // Tier
+  new Chart(document.getElementById('tierChart'),{
+    type:'doughnut',
+    data:{labels:['Tier 1 — Immediate (8)','Tier 2 — Nurture (12)'],datasets:[{data:[8,12],backgroundColor:['rgba(0,230,118,0.85)','rgba(255,179,0,0.75)'],borderWidth:0,hoverOffset:6}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#8899AA',padding:14,font:{size:11}}}},cutout:'65%'}
+  });
+  // Sector
+  const sectorCounts={};
+  companies.forEach(c=>{const s=c.sector.split('/')[0].trim();sectorCounts[s]=(sectorCounts[s]||0)+1;});
+  new Chart(document.getElementById('sectorChart'),{
+    type:'bar',
+    data:{labels:Object.keys(sectorCounts),datasets:[{data:Object.values(sectorCounts),backgroundColor:['rgba(79,195,247,0.75)','rgba(0,230,118,0.7)','rgba(206,147,216,0.7)','rgba(255,179,0,0.7)','rgba(255,82,82,0.65)'],borderRadius:5,borderSkipped:false}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,color:'#4A6080'},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{color:'#4A6080',font:{size:10}},grid:{display:false}}},indexAxis:'y'}
+  });
+  // Score
+  const bins={'9–10':0,'11–12':0,'13–14':0,'15–16':0,'17–18':0};
+  companies.forEach(c=>{if(c.score<=10)bins['9–10']++;else if(c.score<=12)bins['11–12']++;else if(c.score<=14)bins['13–14']++;else if(c.score<=16)bins['15–16']++;else bins['17–18']++;});
+  new Chart(document.getElementById('scoreChart'),{
+    type:'bar',
+    data:{labels:Object.keys(bins),datasets:[{data:Object.values(bins),backgroundColor:['rgba(79,195,247,0.4)','rgba(79,195,247,0.55)','rgba(255,179,0,0.65)','rgba(0,230,118,0.7)','rgba(0,230,118,0.85)'],borderRadius:5,borderSkipped:false}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,color:'#4A6080'},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{color:'#4A6080'},grid:{display:false}}}}
+  });
+
+  renderTable(companies);
+  renderRisks();
+});
+
+/* ============ TABLE ============ */
+let sortCol=10, sortAsc=false;
+
+function renderTable(data){
+  const tbody=document.getElementById('tableBody');
+  const noR=document.getElementById('noResults');
+  document.getElementById('resultCount').textContent=`Showing ${data.length} of ${companies.length}`;
+  if(!data.length){tbody.innerHTML='';noR.style.display='block';return;}
+  noR.style.display='none';
+  tbody.innerHTML=data.map((c,i)=>{
+    const tc=c.tier===1?'tier1':'tier2';
+    const sc=c.tier===1?'t1':'t2';
+    return`<tr class="${tc}" id="row-${i}">
+      <td><div class="rank-num">${c.rank}</div></td>
+      <td><div class="co-name">${c.company}</div><div class="co-hq">${c.hq}</div><a class="co-link" href="https://${c.website}" target="_blank">↗ ${c.website}</a></td>
+      <td><span class="signal-pill">${c.sector}</span></td>
+      <td><div class="body-text">${c.signal}</div></td>
+      <td style="text-align:center"><span class="score-badge ${sc}">${c.score}</span></td>
+      <td><span class="tier-chip ${sc}">Tier ${c.tier}</span></td>
+      <td><div class="body-text">${c.why}</div></td>
+      <td><button class="expand-btn" onclick="toggleDetail(${i},this)">›</button></td>
+    </tr>
+    <tr class="row-detail" id="detail-${i}">
+      <td colspan="8">
+        <div class="detail-grid">
+          <div class="detail-block"><h4>Business Model</h4><p>${c.model}</p></div>
+          <div class="detail-block"><h4>Stage / Funding</h4><p>${c.stage}</p></div>
+          <div class="detail-block">
+            <h4>Key Decision Maker</h4><p>${c.dm}</p>
+            <a class="dm-link" href="${c.dm_link}" target="_blank">↗ View LinkedIn</a><br><br>
+            <h4>Outreach Angle</h4><p class="outreach-italic">"${c.outreach}"</p>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleDetail(i,btn){
+  document.getElementById(`detail-${i}`).classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+function applyFilters(){
+  const tier=document.getElementById('filterTier').value;
+  const sector=document.getElementById('filterSector').value;
+  const minS=parseInt(document.getElementById('filterScore').value)||0;
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  let f=companies.filter(c=>{
+    if(tier&&c.tier!==parseInt(tier))return false;
+    if(sector&&!c.sector.toLowerCase().includes(sector.toLowerCase()))return false;
+    if(c.score<minS)return false;
+    if(q){const h=`${c.company} ${c.sector} ${c.dm} ${c.signal} ${c.why} ${c.outreach} ${c.hq}`.toLowerCase();if(!h.includes(q))return false;}
+    return true;
+  });
+  f=sortData(f,sortCol,sortAsc);
+  renderTable(f);
+}
+
+function clearFilters(){
+  document.getElementById('filterTier').value='';
+  document.getElementById('filterSector').value='';
+  document.getElementById('filterScore').value='0';
+  document.getElementById('searchInput').value='';
+  applyFilters();
+}
+
+function sortTable(col){
+  document.querySelectorAll('thead th').forEach(h=>{h.classList.remove('sort-asc','sort-desc');const s=h.querySelector('.sort-icon');if(s)s.textContent='↕';});
+  if(sortCol===col){sortAsc=!sortAsc;}else{sortCol=col;sortAsc=col!==10&&col!==11;}
+  const th=document.querySelector(`thead th[data-col="${col}"]`);
+  if(th){th.classList.add(sortAsc?'sort-asc':'sort-desc');const s=th.querySelector('.sort-icon');if(s)s.textContent=sortAsc?'↑':'↓';}
+  applyFilters();
+}
+
+function sortData(data,col,asc){
+  const fields=['rank','company','website','hq','sector','signal','model','stage','dm','dm_link','score','tier'];
+  return[...data].sort((a,b)=>{
+    const k=fields[col]||'rank';let va=a[k],vb=b[k];
+    if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();}
+    return va<vb?(asc?-1:1):va>vb?(asc?1:-1):0;
+  });
+}
+
+/* ============ ANTI-THESIS ============ */
+function renderRisks(){
+  renderRiskGrid('riskGridCritical',antithesisRisks.filter(r=>r.level==='critical'));
+  renderRiskGrid('riskGridHigh',antithesisRisks.filter(r=>r.level==='high'));
+  renderRiskGrid('riskGridMedium',antithesisRisks.filter(r=>r.level==='medium'));
+}
+function renderRiskGrid(id,risks){
+  document.getElementById(id).innerHTML=risks.map(r=>`
+    <div class="risk-card" onclick="this.classList.toggle('open')">
+      <div class="risk-header">
+        <div class="risk-num ${r.level}">${r.num}</div>
+        <div class="risk-title">${r.title}</div>
+        <span class="risk-arrow">›</span>
+      </div>
+      <div class="risk-body">
+        <div class="risk-challenge">${r.challenge}</div>
+        <div class="risk-action"><strong>→ Action</strong>${r.action}</div>
+      </div>
+    </div>`).join('');
+}
+function showTab(name,el){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+/* ============ NAV ============ */
+document.querySelectorAll('.nav a').forEach(a=>{
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelector(this.getAttribute('href')).scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+const sections=['overview','prospects','antithesis','nextsteps'];
+window.addEventListener('scroll',()=>{
+  let cur=sections[0];
+  sections.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<120)cur=id;});
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+},{passive:true});
+</script>
+</body>
+</html>
